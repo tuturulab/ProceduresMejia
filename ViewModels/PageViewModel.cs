@@ -1359,7 +1359,26 @@ namespace Variedades
         {
             try
             {
-                _context.Pedido.Add(_Pedido);
+                //var cliente = _context.Cliente.Add(Cliente);
+
+                SqlParameter[] _params = {
+                    new SqlParameter("@Estado_Pedido", _Pedido.Estado_Pedido),
+                    new SqlParameter("@Fecha_Entrega", _Pedido.Fecha_Entrega),
+                    new SqlParameter("@Fecha_Pedido", _Pedido.Fecha_Pedido),
+                    new SqlParameter("@Cliente", _Pedido.cliente.IdCliente),
+                    new SqlParameter()
+                    {
+                        ParameterName = "@IdPedido",
+                        SqlDbType = SqlDbType.Int,
+                        Direction = ParameterDirection.Output
+                    }
+                };
+
+                _context.Database.ExecuteSqlCommand("dbo.InsertPedido @Estado_Pedido, @Fecha_Entrega, @Fecha_Pedido, @IdCliente OUT", _params);
+
+                int ClienteId = (int)_params.Last().Value;
+
+                //_context.Pedido.Add(_Pedido);
                 _context.SaveChanges();
                 UpdatePedido(10);
             }
@@ -1408,7 +1427,7 @@ namespace Variedades
             else
             {
                 //Consulta
-                PedidosList = _context.Pedido.ToList();
+                PedidosList = _context.Database.SqlQuery<Pedido>("dbo.GetAllPedidos").ToList();
 
                 //Paginacion
                 PagedPedidoTable.SomeMethod(PedidosList, NumberOfRecords);
@@ -1454,11 +1473,24 @@ namespace Variedades
         public void DeletePedido(Pedido pedido)
         {
             //Buscamos el pedido seleccionado y lo eliminamos de la base de datos
+            try
+            {
+                //Eliminar del observable collection
+                Pedido.Remove(pedido);
 
-            _context.Pedido.Remove(pedido);
+                SqlParameter[] _params = {
+                    new SqlParameter("@IdPedido", pedido.IdPedido)
+                };
 
-            //Eliminar del observable collection
-            //Pedido.Remove(venta);
+                _context.Database.ExecuteSqlCommand("dbo.deletePedido @IdPedido" , _params);
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            
 
             //Guardamos los cambios de la base de datos
             _context.SaveChanges();
@@ -1474,7 +1506,7 @@ namespace Variedades
             if (filtro != string.Empty)
             {
 
-                SearchPedidoList = PedidosList.Where(s => s.cliente.Nombre.ToLower().Contains(filtro.ToLower() )).ToList();
+                SearchPedidoList = PedidosList.Where(s => s.Estado_Pedido.Contains(filtro.ToLower() )).ToList();
 
                 UpdatePedido(10,SearchPedidoList);
             }
@@ -1577,7 +1609,15 @@ namespace Variedades
         //Agregar Proveedor
         public void AddProveedor(Proveedor proveedor)
         {
-            var Proveedor = _context.Proveedor.Add(proveedor);
+            //var Proveedor = _context.Proveedor.Add(proveedor);
+
+            SqlParameter[] _params = {
+                new SqlParameter("@Empresa", proveedor.Empresa),
+                new SqlParameter("@LugarImportacion", proveedor.Lugar_Importacion)
+            };
+
+            _context.Database.ExecuteSqlCommand("dbo.CreateProveedor @Empresa, @LugarImportacion" , _params);
+
             _context.SaveChanges();
 
             SelectedProveedorWindow = proveedor;

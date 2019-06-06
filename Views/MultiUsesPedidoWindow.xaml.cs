@@ -102,7 +102,8 @@ namespace Variedades.Views
                     {
                         cliente = cliente,
                         Fecha_Pedido = DateTime.Now,
-                        Estado_Pedido = "En trámite"
+                        Estado_Pedido = "En trámite",
+                        Fecha_Entrega = DateTime.Now
                     };
 
                     List<Especificacion_pedido> ListaProductos = new List<Especificacion_pedido>();
